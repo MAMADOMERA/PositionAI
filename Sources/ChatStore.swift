@@ -142,7 +142,7 @@ final class ChatStore: ObservableObject {
         if ["claude-"].contains(where: { selectedModel.hasPrefix($0) }) {
             body.removeValue(forKey: "temperature")
         }
-        let r = request("chat/completions")
+        var r = request("chat/completions")
         r.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         task = URLSession.shared.dataTask(with: r) { [weak self] data, response, error in
@@ -160,7 +160,7 @@ final class ChatStore: ObservableObject {
                     guard line.hasPrefix("data: ") else { continue }
                     let payload = line.dropFirst(6)
                     if payload == "[DONE]" { break }
-                    guard let json = try? JSONSerialization.jsonObject(with: Data(payload)) as? [String: Any],
+                    guard let json = try? JSONSerialization.jsonObject(with: Data(payload.utf8)) as? [String: Any],
                           let choices = json["choices"] as? [[String: Any]],
                           let delta = choices.first?["delta"] as? [String: Any] else { continue }
                     if let content = delta["content"] as? String { answer += content }
